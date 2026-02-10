@@ -35,12 +35,12 @@ export const isAuthenticated = async function (req, res, next) {
       });
     }
 
-    // console.log('auth Middleware', user);
-    // console.log('auth Middleware before', req);
+    if (!user.isActive) {
+      return res.status(403).json({ message: "Account disabled" });
+    }
 
     req.user = user; // user and response ID are same eg: "67499aa448b9f40d1bed1c84"
 
-    // console.log('auth Middleware after', req);
     next();
   } catch (error) {
     console.log(error);
