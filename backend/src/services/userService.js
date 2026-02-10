@@ -4,8 +4,8 @@ import {
   findAllUser,
   getUserById,
 } from "../repository/userRepo.js";
-import { createJWT } from "../utils/authJWT.js";
 import bcrypt from "bcrypt";
+import { generateTokens } from "../utils/authTokens.js";
 
 export const createUserService = async function (user) {
   try {
@@ -51,15 +51,16 @@ export const loginUserService = async function (userDetails) {
     user.isActive = true;
     await user.save();
 
+    // Tokens
+    const { accessToken, refreshToken } = await generateTokens(user);
+
     return {
       email: user.email,
       id: user.id,
       role: user.role,
       isActive: user.isActive,
-      token: createJWT({
-        id: user.id,
-        email: user.email,
-      }),
+      accessToken,
+      refreshToken,
     };
   } catch (error) {
     console.log("SignIn service error", error);

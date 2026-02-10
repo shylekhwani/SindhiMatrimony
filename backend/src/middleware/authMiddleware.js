@@ -6,7 +6,7 @@ export const isAuthenticated = async function (req, res, next) {
   const token = req.headers["x-access-token"];
 
   if (!token) {
-    return res.status(400).json({
+    return res.status(401).json({
       success: false,
       message: "Token is required",
     });
@@ -19,7 +19,7 @@ export const isAuthenticated = async function (req, res, next) {
     console.log("Decoded JWT response:", response);
 
     if (!response) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "invalid auth token",
       });
@@ -46,7 +46,7 @@ export const isAuthenticated = async function (req, res, next) {
     console.log(error);
     return res.status(401).json({
       success: false,
-      message: "Invalid token",
+      message: "Invalid token from middleware",
     });
   }
 };
