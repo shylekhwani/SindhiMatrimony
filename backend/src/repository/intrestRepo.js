@@ -1,8 +1,12 @@
 import INTEREST from "../schemas/intrestSchema.js";
 
-export const createInterest = async (data) => {
+export const createInterest = async (senderId, receiverId) => {
   try {
-    const newIntrest = await INTEREST.create(data);
+    const newIntrest = await INTEREST.create({
+      sender: senderId,
+      receiver: receiverId,
+      status: "pending",
+    });
     return newIntrest;
   } catch (error) {
     console.log("error in intrestRepo", error);

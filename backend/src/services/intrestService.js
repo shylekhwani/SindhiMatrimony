@@ -7,24 +7,45 @@ import {
   getSentInterests,
 } from "../repository/intrestRepo.js";
 
+import { findMatchBetweenUsers, createMatch } from "../repository/matchRepo.js";
+import INTEREST from "../schemas/intrestSchema.js";
+
 export const sendInterestService = async (senderId, receiverId) => {
   try {
     if (senderId === receiverId) {
-      throw { status: 400, message: "Cannot send interest to yourself" };
+      throw { status: 400, message: "You cannot send request to yourself" };
     }
 
-    const existing = await findInterest(senderId, receiverId);
-    if (existing) {
-      throw { status: 400, message: "Interest already sent" };
+    // Check already matched
+    const existingMatch = await findMatchBetweenUsers(senderId, receiverId);
+    if (existingMatch) {
+      throw { status: 400, message: "You are already matched" };
     }
 
-    return await createInterest({
-      sender: senderId,
-      receiver: receiverId,
-    });
+    // Check same direction request
+    const existingRequest = await findInterest(senderId, receiverId);
+    if (existingRequest) {
+      throw { status: 400, message: "Request already sent" };
+    }
+
+    // Check reverse request
+    const reverseRequest = await findInterest(receiverId, senderId);
+
+    if (reverseRequest && reverseRequest.status === "pending") {
+      // Create Match
+      await createMatch(senderId, receiverId);
+
+      // Delete old pending request
+      await INTEREST.findByIdAndDelete(reverseRequest._id);
+
+      return { message: "It's a match!" };
+    }
+
+    // Otherwise create new request
+    return await createInterest(senderId, receiverId);
   } catch (error) {
-    console.error("Error in sendInterestService:", error);
-    throw error; // Pass the error to the controller
+    console.log("Error in sendInterestService", error);
+    throw error;
   }
 };
 
@@ -48,7 +69,21 @@ export const respondToInterestService = async (interestId, userId, action) => {
       throw { status: 400, message: "Invalid action" };
     }
 
-    return await updateInterestStatus(interestId, action);
+    const updatedInterest = await updateInterestStatus(interestId, action);
+
+    // 🔥 If accepted → create match
+    if (action === "accepted") {
+      const alreadyMatched = await findMatchBetweenUsers(
+        interest.sender,
+        interest.receiver,
+      );
+
+      if (!alreadyMatched) {
+        await createMatch(interest.sender, interest.receiver);
+      }
+    }
+
+    return updatedInterest;
   } catch (error) {
     console.error("Error in respondToInterestService:", error);
     throw error; // Pass the error to the controller
