@@ -2,7 +2,7 @@ import {
   createProfile,
   findAllProfiles,
   getProfileById,
-  updateProfile,
+  searchProfiles,
 } from "../repository/profileRepo.js";
 import { calculateProfileCompletion } from "../utils/profileCompletion.js";
 import cloudinary from "../config/cloudinaryConfig.js";
@@ -150,4 +150,95 @@ export const deleteProfileImageService = async (userId, photoId) => {
   await profile.save();
 
   return profile.photos;
+};
+
+export const searchProfilesService = async (currentUser, query) => {
+  const {
+    gender,
+    minAge,
+    maxAge,
+    city,
+    maritalStatus,
+    page,
+    limit,
+    caste,
+    sortBy = "createdAt",
+    order = "desc",
+  } = query;
+
+  const filters = {
+    userId: { $ne: currentUser.id }, // exclude self
+    profileCompleted: true,
+  };
+
+  // Adding filters :
+
+  // Gender filter
+  if (gender) {
+    filters["gender"] = gender;
+  }
+
+  // Marital status
+  if (maritalStatus) {
+    filters["maritalStatus"] = maritalStatus;
+  }
+
+  // City
+  if (city) {
+    filters["city"] = city;
+  }
+
+  // City
+  if (caste) {
+    filters["caste"] = caste;
+  }
+
+  // Age filter (convert to DOB range)
+  if (minAge || maxAge) {
+    const today = new Date();
+
+    filters["dateOfBirth"] = {};
+
+    if (minAge) {
+      const maxDOB = new Date(
+        today.getFullYear() - minAge, // 2026 - 22 = 2004
+        today.getMonth(),
+        today.getDate(),
+      );
+      filters["dateOfBirth"].$lte = maxDOB; // $lte: 2004-02-11,
+    }
+
+    if (maxAge) {
+      const minDOB = new Date(
+        today.getFullYear() - maxAge, // 2026 - 28 = 1998
+
+        today.getMonth(),
+        today.getDate(),
+      );
+      filters["dateOfBirth"].$gte = minDOB; //  $gte: 1998-02-11
+    }
+  }
+
+  /* Sample Of Filter Object
+      {
+      userId: { $ne: "65ab12cd45ef678901234567" },
+      profileCompleted: true,
+      "basicInfo.gender": "female",
+      "professionalInfo.city": "Mumbai",
+      "basicInfo.dateOfBirth": {
+        $lte: new Date("2004-02-11"),
+        $gte: new Date("1998-02-11")
+      }
+    }
+      */
+
+  return await searchProfiles(
+    filters,
+    {
+      page: Number(page) || 1,
+      limit: Number(limit) || 10,
+    },
+    sortBy,
+    order,
+  );
 };

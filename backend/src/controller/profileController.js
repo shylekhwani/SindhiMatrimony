@@ -5,6 +5,7 @@ import {
   getProfileByIdService,
   updateProfileService,
   uploadProfileImageService,
+  searchProfilesService,
 } from "../services/profileService.js";
 
 export const createProfileController = async function (req, res, next) {
@@ -114,6 +115,19 @@ export const deleteProfileImageController = async (req, res, next) => {
       success: true,
       message: "Image deleted successfully",
       data: photos,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const searchProfilesController = async (req, res, next) => {
+  try {
+    const result = await searchProfilesService(req.user, req.query);
+
+    res.status(200).json({
+      success: true,
+      data: result,
     });
   } catch (error) {
     next(error);

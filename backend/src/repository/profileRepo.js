@@ -64,3 +64,32 @@ export const updateProfile = async function (id, ProfileToUpdate) {
     throw error;
   }
 };
+
+export const searchProfiles = async (filters, options) => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    order = "desc",
+  } = options;
+
+  const skip = (page - 1) * limit;
+
+  const sortDirection = order === "asc" ? 1 : -1;
+
+  const profiles = await PROFILE.find(filters)
+    .sort({ [sortBy]: sortDirection })
+    .skip(skip)
+    .limit(limit)
+    .select("-photos.publicId")
+    .lean();
+
+  const total = await PROFILE.countDocuments(filters);
+
+  return {
+    profiles,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
+};
