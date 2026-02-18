@@ -11,7 +11,7 @@ const startServer = async () => {
   // HTTP server from express app
   const server = createServer(app);
 
-  initSocket(server);
+  await initSocket(server);
 
   server.listen(env.PORT, () => {
     console.log(`🚀 Server running on port ${env.PORT}`);

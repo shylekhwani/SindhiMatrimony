@@ -25,7 +25,7 @@ const messageSchema = new mongoose.Schema(
 );
 
 // index for faster retrieval
-messageSchema.index({ chatId: 1 });
+messageSchema.index({ chatId: 1, createdAt: -1 });
 
 const MESSAGE = mongoose.model("MESSAGE", messageSchema);
 
