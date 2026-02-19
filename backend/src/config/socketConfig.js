@@ -7,6 +7,7 @@ import CHAT from "../schemas/chatSchema.js";
 import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 import { redis } from "./redisConfig.js";
+import { createNotification } from "../services/notificationService.js";
 
 let io;
 
@@ -102,6 +103,13 @@ export const initSocket = async (server) => {
 
         // 4️⃣ Emit to receiver room
         io.to(receiverId).emit("new_message", message);
+
+        await createNotification({
+          userId: receiverId,
+          type: "MESSAGE",
+          referenceId: chat._id,
+          content: message?.content || "You have a message",
+        });
 
         // 5️⃣ Emit back to sender (confirmation)
         socket.emit("message_sent", message);
