@@ -8,6 +8,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 import { redis } from "./redisConfig.js";
 import { createNotification } from "../services/notificationService.js";
+import { checkMessageSpam } from "../utils/socketSpamGuard.js";
 
 let io;
 
@@ -84,6 +85,15 @@ export const initSocket = async (server) => {
       try {
         if (!receiverId || !content) {
           return socket.emit("error", "Missing fields");
+        }
+
+        // 🔴 Check spam
+        const allowed = await checkMessageSpam(user.id);
+
+        if (!allowed) {
+          return socket.emit("error_message", {
+            message: "Too many messages. Slow down.",
+          });
         }
 
         // 1️⃣ Get or create chat

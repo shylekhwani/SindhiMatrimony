@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import apiRouter from "./routes/apiRouter.js";
+import { globalLimiter } from "./middleware/ratelimiter.js";
 
 const app = express();
 
@@ -10,7 +11,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", apiRouter);
+app.use("/api", globalLimiter, apiRouter);
 
 app.get("/health", (req, res) => {
   res.json({ status: "OK", service: "Sindhi Matrimony Backend" });
