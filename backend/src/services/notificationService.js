@@ -39,6 +39,33 @@ export const getNotificationsService = async function (userId) {
   }
 };
 
+export const getNotificationsByTypeService = async function (
+  userId,
+  type,
+  page,
+  limit,
+) {
+  try {
+    const allowedTypes = ["MESSAGE", "MATCH", "INTEREST"];
+
+    if (!allowedTypes.includes(type)) {
+      throw new Error("Invalid notification type");
+    }
+
+    const skip = (page - 1) * limit;
+
+    const notifications = await NOTIFICATION.find({ userId, type })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return notifications;
+  } catch (error) {
+    console.log("Err in notificationService");
+    throw error;
+  }
+};
+
 export const markNotificationReadService = async function (id, userId) {
   try {
     const notifications = await NOTIFICATION.findOneAndUpdate(

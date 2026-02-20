@@ -33,7 +33,7 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ userId: 1, type: 1, isRead: 1 });
 
 const NOTIFICATION = mongoose.model("NOTIFICATION", notificationSchema);
 

@@ -1,4 +1,5 @@
 import {
+  getNotificationsByTypeService,
   getNotificationsService,
   getUnreadCountService,
   markNotificationReadService,
@@ -9,6 +10,33 @@ export const getNotificationsController = async (req, res) => {
     const userId = req.user.id;
 
     const notifications = await getNotificationsService(userId);
+
+    res.json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getNotificationsByTypeController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { type, page = 1, limit = 20 } = req.query;
+
+    if (!type) {
+      return res.status(400).json({
+        message: "Type query param is required",
+      });
+    }
+
+    const notifications = await getNotificationsByTypeService(
+      userId,
+      type,
+      page,
+      limit,
+    );
 
     res.json({
       success: true,
