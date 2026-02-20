@@ -5,7 +5,7 @@ import {
   markNotificationReadService,
 } from "../services/notificationService.js";
 
-export const getNotificationsController = async (req, res) => {
+export const getNotificationsController = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -16,11 +16,11 @@ export const getNotificationsController = async (req, res) => {
       notifications,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getNotificationsByTypeController = async (req, res) => {
+export const getNotificationsByTypeController = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { type, page = 1, limit = 20 } = req.query;
@@ -43,11 +43,11 @@ export const getNotificationsByTypeController = async (req, res) => {
       notifications,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const markNotificationReadController = async (req, res) => {
+export const markNotificationReadController = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
@@ -63,11 +63,11 @@ export const markNotificationReadController = async (req, res) => {
       notification,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getUnreadCountController = async (req, res) => {
+export const getUnreadCountController = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -75,6 +75,6 @@ export const getUnreadCountController = async (req, res) => {
 
     res.json({ unread: count });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };

@@ -1,7 +1,7 @@
 import MESSAGE from "../schemas/messageSchema.js";
 import CHAT from "../schemas/chatSchema.js";
 
-export const getChatMessagesController = async (req, res) => {
+export const getChatMessagesController = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { chatId } = req.params;
@@ -38,6 +38,6 @@ export const getChatMessagesController = async (req, res) => {
       messages,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };

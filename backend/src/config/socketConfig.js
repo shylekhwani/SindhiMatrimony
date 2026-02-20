@@ -9,6 +9,7 @@ import Redis from "ioredis";
 import { redis } from "./redisConfig.js";
 import { createNotification } from "../services/notificationService.js";
 import { checkMessageSpam } from "../utils/socketSpamGuard.js";
+import { sendMessageSchema } from "../middleware/message.validation.js";
 
 let io;
 
@@ -96,35 +97,44 @@ export const initSocket = async (server) => {
           });
         }
 
-        // 1️⃣ Get or create chat
+        // Get or create chat
         const chat = await getOrCreateChat(user.id, receiverId);
 
-        // 2️⃣ Save message
-        const message = await MESSAGE.create({
-          chatId: chat._id,
-          sender: user.id,
+        // Zod validation (clean + safe)
+        const parsed = sendMessageSchema.parse({
+          chatId: chat._id.toString(),
           content,
         });
 
-        // 3️⃣ Update chat last message
-        chat.lastMessage = content;
+        const { chatId, content: validatedContent } = parsed;
+
+        // Save message
+        const message = await MESSAGE.create({
+          chatId,
+          sender: user.id,
+          content: validatedContent,
+        });
+
+        // Update chat metadata
+        chat.lastMessage = validatedContent;
         chat.lastMessageAt = new Date();
         await chat.save();
 
-        // 4️⃣ Emit to receiver room
+        // Emit to receiver
         io.to(receiverId).emit("new_message", message);
 
+        // Create notification
         await createNotification({
           userId: receiverId,
           type: "MESSAGE",
           referenceId: chat._id,
-          content: message?.content || "You have a message",
+          content: validatedContent,
         });
 
-        // 5️⃣ Emit back to sender (confirmation)
+        // Confirm to sender
         socket.emit("message_sent", message);
       } catch (error) {
-        socket.emit("error", error.message);
+        socket.emit("error_message", { message: "Failed to send message" });
       }
     });
 
